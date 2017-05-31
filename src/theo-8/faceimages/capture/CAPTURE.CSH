@@ -1,0 +1,34 @@
+#!/bin/csh -f
+
+onintr Abort
+set progname = $0
+set progname = $progname:t
+
+if ($#argv < 1) then
+  echo "USAGE: $progname <userid>"
+  exit 1
+endif
+
+cd /afs/cs/project/theo-8/faceimages
+echo $argv[1]
+mkdir $argv[1]
+cd $argv[1]
+
+foreach eyes ( open sunglasses )
+  foreach mood ( neutral happy sad angry )
+    foreach lookwhere ( straight left right up )
+
+      echo "Strike a pose: $lookwhere $mood $eyes"
+      echo "Hit <return> when ready"
+      set answer = $<
+      
+      /afs/cs/project/theo-8/faceimages/PGMWRITE/pgmwrite $argv[1]"_"$lookwhere"_"$mood"_"$eyes".pgm"
+
+    end
+  end
+end
+
+cd /afs/cs/project/theo-8/faceimages
+
+exit 0
+

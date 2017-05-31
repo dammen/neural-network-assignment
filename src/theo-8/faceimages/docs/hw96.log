@@ -1,0 +1,114 @@
+This is TeX, Version 3.1415 (C version 6.1) (format=lplain 94.6.16)  15 OCT 1996 10:00
+**&latex209 hw96
+(hw96.tex
+LaTeX Version 2.09 <25 March 1992>
+(/usr/local/lib/texmf/tex/cmu/cmu-art.sty
+Modified CMU Article -- 1 March 1989
+(/usr/local/lib/texmf/tex/latex209/art12.sty)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+) (hw96.aux) [1
+
+]
+Overfull \hbox (70.13425pt too wide) in paragraph at lines 86--87
+[]\twltt xv /afs/cs/project/theo-8/faceimages/faces/glickman/glickman[]straight
+[]happy[]open[]4.pgm 
+
+\hbox(8.33331+2.66666)x469.0
+.\hbox(0.0+0.0)x15.0
+.\twltt x
+.\twltt v
+.\glue 6.175
+.\twltt /
+.etc.
+
+[2]
+Overfull \hbox (20.04192pt too wide) in paragraph at lines 150--152
+[]\twltt facetrain -n shades.net -t straightrnd[]train.list -1 straightrnd[]tes
+t1.list 
+
+\hbox(7.33333+2.66666)x439.6253
+.\hbox(0.0+0.0)x0.0
+.\twltt f
+.\twltt a
+.\twltt c
+.\twltt e
+.etc.
+
+
+Overfull \hbox (43.8338pt too wide) in paragraph at lines 153--159
+\twlrm fin-ished. \twltt straightrnd[]train.list\twlrm , \twltt straightrnd[]te
+st1.list\twlrm , and \twltt straightrnd[]test2.list
+
+\hbox(8.33331+2.66666)x439.6253, glue set - 1.0
+.\twlrm ^^L (ligature fi)
+.\twlrm n
+.\discretionary
+..\twlrm -
+.\twlrm i
+.\twlrm s
+.etc.
+
+[3]
+Overfull \hbox (20.04192pt too wide) in paragraph at lines 185--187
+[]\twltt facetrain -n face.net -t straighteven[]train.list -1 straighteven[]tes
+t1.list 
+
+\hbox(7.33333+2.66666)x439.6253
+.\hbox(0.0+0.0)x0.0
+.\twltt f
+.\twltt a
+.\twltt c
+.\twltt e
+.etc.
+
+
+Overfull \hbox (38.56693pt too wide) in paragraph at lines 211--212
+[]\twltt facetrain -n face.net -T -1 straighteven[]test1.list -2 straighteven[]
+test2.list 
+
+\hbox(7.33333+2.66666)x439.6253
+.\hbox(0.0+0.0)x0.0
+.\twltt f
+.\twltt a
+.\twltt c
+.\twltt e
+.etc.
+
+[4] [5]
+Overfull \hbox (128.73398pt too wide) in paragraph at lines 286--289
+[] []\twlrm Take a look at the ad-di-tional data from an ear-lier year's class 
+in \twltt /afs/cs.cmu.edu/project/theo-8/ml94faces\twlrm .
+
+\hbox(8.33331+2.66666)x439.6253, glue set - 1.0
+.\hbox(0.0+0.0)x0.0
+.\glue 0.0
+.\hbox(5.33334+0.0)x0.0
+..\glue 0.0
+..\glue -23.49976
+..\glue -5.87494
+..\hbox(5.33334+0.0)x23.49976, glue set 23.49976fil
+...\glue 0.0 plus 1.0fil minus 1.0fil
+...\hbox(5.33334+0.0)x0.0, glue set - 6.00002fil []
+..\glue 5.87494
+.\penalty 0
+.\twlrm T
+.etc.
+
+[6] [7] [8] [9] [10] [11] [12] [13] (hw96.aux) ) 
+Here is how much of TeX's memory you used:
+ 164 strings out of 11977
+ 1635 string characters out of 87272
+ 31391 words of memory out of 262141
+ 2121 multiletter control sequences out of 9500
+ 18996 words of font info for 72 fonts, out of 100000 for 255
+ 14 hyphenation exceptions out of 607
+ 13i,6n,15p,193b,229s stack positions out of 300i,40n,60p,3000b,4000s
+
+Output written on hw96.dvi (13 pages, 39820 bytes).
