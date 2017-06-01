@@ -120,9 +120,9 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
       imgsize = ROWS(iimg) * COLS(iimg);
       /* bthom ===========================
 	make a net with:
-	  imgsize inputs, 20 hidden units, and 20output units, one for each class
+	  imgsize inputs, 6 hidden units, and 4 output units, one for each class
           */
-      net = bpnn_create(imgsize, 20, 20);
+      net = bpnn_create(imgsize, 6, 4);
     } else {
       printf("Need some images to train on, use -t\n");
       return;
@@ -187,7 +187,6 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
   printf("\n"); fflush(stdout);
 
   printf("Test 1：\n\n");
-
   output_result_on_imagelist(net, test1list, 0);
   printf("Test 2：\n\n");
   output_result_on_imagelist(net, test2list, 0);
@@ -255,7 +254,6 @@ int evaluate_performance(BPNN *net, double *err)
     int flag = 1;
     int i; 
     *err = 0.0;
-
     for (i = 1; i <= net->output_n; i++){
         delta = fabs(net->target[i] - net->output_units[i]);
         *err += (0.5 * delta * delta);
@@ -298,12 +296,12 @@ void printusage(char *prog)
 
 int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors) 
 {
-    int total_wrong_guesses = 0;
+  int total_wrong_guesses = 0;
   double err, val;
   int i, n, j, correct;
   err = 0.0;
   correct = 0;
-  char *names[20] = {"an2i", "at33", "boland", "bpm","ch4f","cheyer","choon","danieln","glickman","karyadi","kawamura","kk49","megak","mitchell","night","phoebe","steffi","sz24","saavik","tammo"};
+  char *poses[4] = {"left", "right", "straight", "up"};
   n = il->n;
     printf("Testing imagelist：%i\n", n);
 
@@ -316,7 +314,7 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
       /*** Set up the target vector for this image. **/
       load_target(il->list[i], net);
 
-      int c = 0, j, flag;
+      int c = 0, j, flag; 
 
       printf("Testing image：%s\n", NAME(il->list[i]));
 
@@ -327,7 +325,7 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
             }
         }
         flag = 1;
-        for (j = 1; j <=20; j++){
+        for (j = 1; j <=4; j++){
             if(j != c){
                 if(net->output_units[j] > 0.5){
                     flag = 0;
@@ -335,9 +333,9 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
             }
         }
         if(flag){ 
-            for(j = 0; j < 20; j++){
+            for(j = 0; j < 4; j++){
                 if( c == j+1){
-                    printf("guessed: %s\n", names[j]);
+                    printf("guessed: %s\n", poses[j]);
                     break;
                 }
             }   
@@ -347,7 +345,7 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
         correct++;
         printf(" which is correct \n");
       } else {
-        printf("which is  ---------------------------------------------------------->  WRONG \n");
+        printf("which is  --------------------------------->  WRONG \n");
         total_wrong_guesses++;
       }
       printf("\n");
