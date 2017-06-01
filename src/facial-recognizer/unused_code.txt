@@ -1,0 +1,87 @@
+ 
+
+  if(c == 1 ){
+            printf("guessed an2i");
+        }
+        else if(c == 2){
+            printf("guessed at33");
+        }
+        else if(c == 3){
+            printf("guessed boland");
+        }            
+        else if(c == 4){
+            printf("guessed bpm");
+        }
+        else if(c == 5){
+            printf("guessed ch4f");
+        } 
+        else if(c == 6){
+        printf("guessed cheyer");
+        }
+        else if(c == 7){
+            printf("guessed choon");
+        } 
+        else if(c == 8){
+            printf("guessed danieln");
+        } 
+        else if(c == 9){
+            printf("guessed glickman");
+        } 
+        else if(c == 10){
+            printf("guessed karyadi");
+        } 
+        else if(c == 11){
+            printf("guessed kawamura");
+        } 
+        else if(c == 12){
+            printf("guessed kk49");
+        } 
+        else if(c == 13){
+            printf("guessed megak");
+        } 
+        else if(c == 14){
+            printf("guessed mitchell");
+        } 
+        else if(c == 15){
+            printf("guessed night");
+        } 
+        else if(c == 16){
+            printf("guessed phoebe");
+        } 
+        else if(c == 17){
+            printf("guessed saavik");
+        } 
+        else if(c == 18){
+            printf("guessed steffi");
+        } 
+        else if(c == 19){
+            printf("guessed sz24");
+        } 
+        else if(c == 20){
+            printf("guessed tammo");
+        }
+        else {
+            printf("Couldn't decide");
+        }
+    }
+
+  /*names[0] = "an2i";
+  names[1] = "at33";
+  names[2] = "boland";
+  names[3] = "bpm";
+  names[4] = "ch4f";
+  names[5] = "cheyer";
+  names[6] = "choon";
+  names[7] = "danieln";
+  names[8] = "glickman";
+  names[9] = "karyadi";
+  names[10] = "kawamura";
+  names[11] = "kk49";
+  names[12] = "megak";
+  names[13] = "mitchell";
+  names[14] = "night";
+  names[15] = "phoebe";
+  names[16] = "steffi";
+  names[17] = "sz24";
+  names[18] = "saavik";
+  names[19] = "tammo";*/
