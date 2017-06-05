@@ -76,7 +76,7 @@ void load_input_with_image(IMAGE *img, BPNN *net)
   k = 1;
   for (i = 0; i < nr; i++) {
     for (j = 0; j < nc; j++) {
-      units[k] = ((double) img_getpixel(img, i, j)) / 255.0;
+      units[k] = ((double) img_getpixel(img, i, j)/255);
       k++;
     }
   }

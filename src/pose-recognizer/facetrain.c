@@ -296,11 +296,16 @@ void printusage(char *prog)
 
 int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors) 
 {
+   char userid[40], head[40], expression[40], eyes[40];
+  int scale[40];
+
+  userid[0] = head[0] = expression[0] = eyes[0] = '\0';
   int total_wrong_guesses = 0;
   double err, val;
   int i, n, j, correct;
   err = 0.0;
   correct = 0;
+  int nr_type1_error = 0, nr_type2_error = 0;
   char *poses[4] = {"left", "right", "straight", "up"};
   n = il->n;
     printf("Testing imagelist：%i\n", n);
@@ -314,53 +319,89 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
       /*** Set up the target vector for this image. **/
       load_target(il->list[i], net);
 
-      int c = 0, j, flag; 
+      int c = 0, j;
+      int failedToGuessRight = 0;    // output was less than 0.5 on right person
+      int failedToReject = 0; // output was bigger than 0.5 on wrong person
 
       printf("Testing image：%s\n", NAME(il->list[i]));
 
-        for (j = 1; j <=net->output_n; j++){
-            if(net->output_units[j] > 0.5){
-                c = j;
-                break;
-            }
+      sscanf(NAME(il->list[i]), "%[^_]_%[^_]_%[^_]_%[^_]",
+        userid, head, expression, eyes);
+
+      for (j = 1; j <=net->output_n; j++){
+        if (strcmp(head, poses[j-1]) == 0){
+          //its the right person 
+          if(net->output_units[j] > 0.5){
+              // correctly guessed right person
+            c = j;
+          }
+          else {
+              // didnt manage to guess right person
+            failedToGuessRight = 1;
+
+          }
         }
-        flag = 1;
-        for (j = 1; j <=4; j++){
-            if(j != c){
-                if(net->output_units[j] > 0.5){
-                    flag = 0;
-                }
-            }
+        else{
+          //its the wrong person
+          if(net->output_units[j] > 0.5){
+            //wrongly guessed another person
+            failedToReject += 1;
+          }
+          else{
+            //correctly didn't guess wrong person
+          }
         }
-        if(flag){ 
-            for(j = 0; j < 4; j++){
-                if( c == j+1){
-                    printf("guessed: %s\n", poses[j]);
-                    break;
-                }
-            }   
-        }
-      /*** See if it got it right. ***/
-      if (evaluate_performance(net, &val)) {
-        correct++;
-        printf(" which is correct \n");
-      } else {
-        printf("which is  --------------------------------->  WRONG \n");
-        total_wrong_guesses++;
       }
-      printf("\n");
+      if(failedToGuessRight == 1 && failedToReject > 0){ 
+        nr_type1_error++;
+        printf("failed to guess right pose.\n");
+        printf("guessed these poses instead:\n");
+        for(j = 0; j < 20; j++){
+          if(net->output_units[j] > 0.5){
+              nr_type2_error++;
+              printf("%s\n", poses[j]);
+              }
+          }   
+      }
+      else if(failedToGuessRight == 1 && failedToReject == 0){
+        nr_type1_error++;
+        printf("failed to guess any pose at all\n");
+      }
+      else if(failedToGuessRight == 0 && failedToReject == 0){
+        printf("correctly guessed the right pose: %s\n", poses[c-1]);
 
-      err += val;
-    }
-
-    err = err / (double)n;
-
-    if (!list_errors)
-      printf("classifcation accuracy: %g%%  #### Number of wrong guesses: %i #### average of the error function: %g%%  \n\n",
-             ((double)correct / (double)n) * 100.0, total_wrong_guesses, err);
-    } else {
-        if (!list_errors)
-            printf("0.0 0.0 ");
+      }
+      else{
+        printf("correctly guessed the right pose: %s\n", poses[c-1]);
+        printf("But guessed these poses as well:\n");
+     
+        for(j = 0; j < 20; j++){
+          if(net->output_units[j] > 0.5 && c != j){
+            nr_type2_error++;
+            printf("%s\n", poses[j]);
+          }
         }
+      }
+
+      /*** See if it got it right. ***/
+        if (evaluate_performance(net, &val)) {
+          correct++;
+          printf(" which is correct \n");
+        } 
+        else {
+          printf("which is  ---------------------------------------------------------->  WRONG \n");
+          total_wrong_guesses++;
+        }
+        printf("\n");
+        err += val;
+      }
+      err = err / (double)n;
+
+      printf("classifcation accuracy: %g%%  #### Number of wrong guesses: %i #### average of the error function: %g%%  \n\n",
+            ((double)correct / (double)n) * 100.0, total_wrong_guesses, err);
+      printf("number of type 1 error: %i\n", nr_type1_error);
+      printf("number of type 2 error: %i\n", nr_type2_error);
+   
+  }
     return 0;
 }

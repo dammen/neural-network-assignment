@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "facetrain.h"
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
@@ -115,13 +116,13 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
   /*** Read network in if it exists, otherwise make one from scratch ***/
   if ((net = bpnn_read(netname)) == NULL) {
     if (train_n > 0) {
-      printf("Creating new network '%s'\n", netname);
       iimg = trainlist->list[0];
       imgsize = ROWS(iimg) * COLS(iimg);
       /* bthom ===========================
 	make a net with:
-	  imgsize inputs, 20 hidden units, and 20output units, one for each class
+	  imgsize inputs, 20 hidden units, and 20 output units, one for each class
           */
+      printf("creating net\n");
       net = bpnn_create(imgsize, 20, 20);
     } else {
       printf("Need some images to train on, use -t\n");
@@ -151,14 +152,19 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
     performance_on_imagelist(net, test2list, 1);
   }
 
-  /************** Train it *****************************/
-  for (epoch = 1; epoch <= epochs; epoch++) {
 
+  /************** Train it *****************************/
+  int c = 0;
+  double r = 100;
+  int prev_r = 100;
+  double momentum;
+  double learning_rate;
+    for (epoch = 1; epoch <= epochs; epoch++) {
+    
     printf("%d ", epoch);  fflush(stdout);
 
     sumerr = 0.0;
     for (i = 0; i < train_n; i++) {
-
       /** Set up input units on net with image i **/
       load_input_with_image(trainlist->list[i], net);
 
@@ -173,10 +179,16 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
     printf("%g ", sumerr);
 
     /*** Evaluate performance on train, test, test2, and print perf ***/
-    performance_on_imagelist(net, trainlist, 0);
-    performance_on_imagelist(net, test1list, 0);
-    performance_on_imagelist(net, test2list, 0);
-    printf("\n");  fflush(stdout);
+    //performance_on_imagelist(net, trainlist, 0);
+    printf("result on trainlist: \n");
+    output_result_on_imagelist(net, trainlist, 1);
+
+    printf("result on testlist: \n");
+    prev_r = r;
+    output_result_on_imagelist(net, test1list, 1);
+    
+    //performance_on_imagelist(net, test1list, 0);
+       printf("\n"); printf("\n");  fflush(stdout);
 
     /*** Save network every 'savedelta' epochs ***/
     if (!(epoch % savedelta)) {
@@ -184,13 +196,14 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
     }
 
   }
+  performance_on_imagelist(net, test2list, 0);
   printf("\n"); fflush(stdout);
 
   printf("Test 1：\n\n");
 
-  output_result_on_imagelist(net, test1list, 0);
+  output_result_on_imagelist(net, test1list, 1);
   printf("Test 2：\n\n");
-  output_result_on_imagelist(net, test2list, 0);
+  output_result_on_imagelist(net, test2list, 1);
 
   /** Save the trained network **/
   if (epochs > 0) {
@@ -237,12 +250,13 @@ void performance_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
 
     err = err /  (double) n;
 
-    if (!list_errors)
+    if (!list_errors){}
       /* bthom==================================
+    }
 	 this line prints part of the ouput line
 	 discussed in section 3.1.2 of homework
           */
-      printf("%g %g ", ((double) correct / (double) n) * 100.0, err);
+   //   printf("%g %g ", ((double) correct / (double) n) * 100.0, err);
   } else {
     if (!list_errors)
       printf("0.0 0.0 ");
@@ -296,16 +310,21 @@ void printusage(char *prog)
   printf("       [-T]\n");
 }
 
-int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors) 
+double output_result_on_imagelist(BPNN *net, IMAGELIST *il, int evaluate) 
 {
-    int total_wrong_guesses = 0;
+  char userid[40], head[40], expression[40], eyes[40];
+  int scale[40];
+
+  userid[0] = head[0] = expression[0] = eyes[0] = '\0';
+  int total_wrong_guesses = 0;
   double err, val;
   int i, n, j, correct;
   err = 0.0;
   correct = 0;
+  int nr_type1_error = 0, nr_type2_error = 0;
   char *names[20] = {"an2i", "at33", "boland", "bpm","ch4f","cheyer","choon","danieln","glickman","karyadi","kawamura","kk49","megak","mitchell","night","phoebe","steffi","sz24","saavik","tammo"};
   n = il->n;
-    printf("Testing imagelist：%i\n", n);
+//  printf("Testing imagelist：%i\n", n);
 
   if (n > 0) {
     for (i = 0; i < n; i++) {
@@ -316,53 +335,88 @@ int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors)
       /*** Set up the target vector for this image. **/
       load_target(il->list[i], net);
 
-      int c = 0, j, flag;
+      int c = 0, j;
+      int failedToGuessRight = 0;    // output was less than 0.5 on right person
+      int failedToReject = 0; // output was bigger than 0.5 on wrong person
 
       printf("Testing image：%s\n", NAME(il->list[i]));
 
-        for (j = 1; j <=net->output_n; j++){
-            if(net->output_units[j] > 0.5){
-                c = j;
-                break;
-            }
+      sscanf(NAME(il->list[i]), "%[^_]_%[^_]_%[^_]_%[^_]",
+        userid, head, expression, eyes);
+
+      for (j = 1; j <=net->output_n; j++){
+        if (strcmp(userid, names[j-1]) == 0){
+          //its the right person 
+          if(net->output_units[j] > 0.5){
+              // correctly guessed right person
+            c = j;
+          }
+          else {
+              // didnt manage to guess right person
+            failedToGuessRight = 1;
+
+          }
         }
-        flag = 1;
-        for (j = 1; j <=20; j++){
-            if(j != c){
-                if(net->output_units[j] > 0.5){
-                    flag = 0;
-                }
-            }
+        else{
+          //its the wrong person
+          if(net->output_units[j] > 0.5){
+            //wrongly guessed another person
+            failedToReject += 1;
+          }
+          else{
+            //correctly didn't guess wrong person
+          }
         }
-        if(flag){ 
-            for(j = 0; j < 20; j++){
-                if( c == j+1){
-                    printf("guessed: %s\n", names[j]);
-                    break;
-                }
-            }   
-        }
-      /*** See if it got it right. ***/
-      if (evaluate_performance(net, &val)) {
-        correct++;
-        printf(" which is correct \n");
-      } else {
-        printf("which is  ---------------------------------------------------------->  WRONG \n");
-        total_wrong_guesses++;
       }
-      printf("\n");
-
-      err += val;
-    }
-
-    err = err / (double)n;
-
-    if (!list_errors)
-      printf("classifcation accuracy: %g%%  #### Number of wrong guesses: %i #### average of the error function: %g%%  \n\n",
-             ((double)correct / (double)n) * 100.0, total_wrong_guesses, err);
-    } else {
-        if (!list_errors)
-            printf("0.0 0.0 ");
+      if(failedToGuessRight == 1 && failedToReject > 0){ 
+        nr_type1_error++;
+        printf("failed to guess right person.\n");
+        printf("guessed these persons instead:\n");
+        for(j = 0; j < 20; j++){
+          if(net->output_units[j] > 0.5){
+              nr_type2_error++;
+              printf("%s\n", names[j]);
+              }
+          }   
+      }
+      else if(failedToGuessRight == 1 && failedToReject == 0){
+        nr_type1_error++;
+        printf("failed to guess any person at all\n");
+      }
+      else if(failedToGuessRight == 0 && failedToReject == 0){
+        printf("correctly guessed the right person: %s\n", names[c-1]);
+      }
+      else{
+        printf("correctly guessed the right person: %s\n", names[c-1]);
+        printf("But guessed these persons as well:\n");     
+        for(j = 0; j < 20; j++){
+          if(net->output_units[j] > 0.5 && c != j){
+            nr_type2_error++;
+            printf("%s\n", names[j]);
+          }
         }
-    return 0;
+      }
+
+      /*** See if it got it right. ***/
+        if (evaluate_performance(net, &val)) {
+          correct++;
+          printf(" which is correct \n");
+        } 
+        else {
+          printf("which is  ---------------------------------------------------------->  WRONG \n");
+          total_wrong_guesses++;
+        }
+        printf("\n");
+        err += val;
+      }
+      err = err / (double)n;
+
+      printf("classifcation accuracy: %g%%  #### Number of wrong guesses: %i #### average of the error function: %g%%  \n\n",
+            ((double)correct / (double)n) * 100.0, total_wrong_guesses, err);
+      printf("number of type 1 error: %i\n", nr_type1_error);
+      printf("number of type 2 error: %i\n", nr_type2_error);
+   
+  }
+
+  return 0;
 }

@@ -131,9 +131,15 @@ int n_in, n_hidden, n_out;
   newnet->input_n = n_in;
   newnet->hidden_n = n_hidden;
   newnet->output_n = n_out;
+  //newnet->convolution_n = n_in;
+
   newnet->input_units = alloc_1d_dbl(n_in + 1);
   newnet->hidden_units = alloc_1d_dbl(n_hidden + 1);
   newnet->output_units = alloc_1d_dbl(n_out + 1);
+
+  //CONV
+  newnet->convolution_units = alloc_1d_dbl(n_in + 1);
+  newnet->kernel_units = alloc_2d_dbl(4, 4);
 
   newnet->hidden_delta = alloc_1d_dbl(n_hidden + 1);
   newnet->output_delta = alloc_1d_dbl(n_out + 1);
@@ -160,6 +166,11 @@ BPNN *net;
   free((char *) net->input_units);
   free((char *) net->hidden_units);
   free((char *) net->output_units);
+
+  free((char *) net->kernel_units);
+  free((char *) net->convolution_units);
+
+
 
   free((char *) net->hidden_delta);
   free((char *) net->output_delta);
@@ -195,6 +206,7 @@ BPNN *net;
 BPNN *bpnn_create(n_in, n_hidden, n_out)
 int n_in, n_hidden, n_out;
 {
+  double **A;
 
   BPNN *newnet;
 
@@ -208,6 +220,21 @@ int n_in, n_hidden, n_out;
   bpnn_randomize_weights(newnet->hidden_weights, n_hidden, n_out);
   bpnn_zero_weights(newnet->input_prev_weights, n_in, n_hidden);
   bpnn_zero_weights(newnet->hidden_prev_weights, n_hidden, n_out);
+
+  A = newnet->kernel_units;
+  A[0][0] = 0;
+  A[0][1] = 0;
+  A[0][2] = 0;
+
+  A[1][0] = 0;
+  A[1][1] = 1;
+  A[1][2] = 0;
+
+  A[2][0] = 0;
+  A[2][1] = 0;
+  A[2][2] = 0;
+
+  //newnet->kernel_units = {{ 0, -1, 0 }, { -1, 5, -1 }, { 0, -1, 0}};
 
   return (newnet);
 }
@@ -223,6 +250,7 @@ int n1, n2;
 
   /*** Set up thresholding unit ***/
   l1[0] = 1.0;
+  l2[0] = 1.0;
 
   /*** For each unit in second layer ***/
   for (j = 1; j <= n2; j++) {
@@ -235,6 +263,36 @@ int n1, n2;
     l2[j] = squash(sum);
   }
 
+}
+void bpnn_convolute(l1, l2, kern, n1, n2)
+double *l1, *l2, **kern;
+int n1, n2;
+{
+  double sum;
+  int j, k, r, v;
+  int l;
+  l = 3;
+  /*** Set up thresholding unit ***/
+  l1[0] = 1.0;
+  /*** For each unit in convolution layer ***/
+  for (j = 1; j <= n1; j++) {
+    /*** Compute weighted sum of its inputs ***/
+    sum = 0.0;
+    for (r = 0; r < l; r++) {
+      for(k = 0; k < l; k++){
+        if((j % 32 == 1 && k == 0 ) || (j % 32 == 0 && k == 2 )){ //add 1 padding to the left or right
+          //do nothing
+        }
+        else if((j <= 32 && r == 0) || (j > 928 && r == 2)){ //add 1 padding at the top or the bottom
+          //do nothing
+        }
+        else{
+          sum += kern[r][k] * l1[ (k-1) + (j + (32 * (r-1)))];
+        }
+      }
+    }
+    l2[j] = (sum);
+  }
 }
 
 
@@ -297,13 +355,31 @@ double *delta, *ly, **w, **oldw, eta, momentum;
 void bpnn_feedforward(net)
 BPNN *net;
 {
-  int in, hid, out;
+  int in, hid, out, conv;
 
   in = net->input_n;
   hid = net->hidden_n;
   out = net->output_n;
 
   /*** Feed forward input activations. ***/
+  printf("bpnn_convolute\n");
+  /*for(int i = 0; i <= in; i++){
+    printf("%f\n", net->input_units[i] );
+  }*/
+
+ /* bpnn_convolute(net->input_units, net->convolution_units,
+      net->kernel_units, in, in);
+  for(int i = 0; i <= in; i++){
+    if(net->input_units[i] != net->convolution_units[i]){
+        printf("%f\n", net->input_units[i] );
+
+      printf("%f\n", net->convolution_units[i] );
+    }
+  }
+
+  printf("trying to set input to convolution\n");
+  net->input_units = net->convolution_units;
+*/
   bpnn_layerforward(net->input_units, net->hidden_units,
       net->input_weights, in, hid);
   bpnn_layerforward(net->hidden_units, net->output_units,
@@ -316,7 +392,7 @@ void bpnn_train(net, eta, momentum, eo, eh)
 BPNN *net;
 double eta, momentum, *eo, *eh;
 {
-  int in, hid, out;
+  int in, hid, out, conv;
   double out_err, hid_err;
 
   in = net->input_n;
@@ -324,6 +400,13 @@ double eta, momentum, *eo, *eh;
   out = net->output_n;
 
   /*** Feed forward input activations. ***/
+  bpnn_convolute(net->input_units, net->convolution_units,
+      net->kernel_units, in, conv);
+
+  net->input_units = net->convolution_units;
+  
+  bpnn_layerforward(net->input_units, net->hidden_units,
+      net->input_weights, in, hid);
   bpnn_layerforward(net->input_units, net->hidden_units,
       net->input_weights, in, hid);
   bpnn_layerforward(net->hidden_units, net->output_units,
@@ -416,6 +499,7 @@ char *filename;
   read(fd, (char *) &n1, sizeof(int));
   read(fd, (char *) &n2, sizeof(int));
   read(fd, (char *) &n3, sizeof(int));
+
   new = bpnn_internal_create(n1, n2, n3);
 
   printf("'%s' contains a %dx%dx%d network\n", filename, n1, n2, n3);

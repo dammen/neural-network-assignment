@@ -23,10 +23,15 @@ typedef struct {
   int input_n;                  /* number of input units */
   int hidden_n;                 /* number of hidden units */
   int output_n;                 /* number of output units */
+  //int kernel_n;                 /* number of kernel units */
+  //int convolution_n;            /* number of convolution units */
 
   double *input_units;          /* the input units */
   double *hidden_units;         /* the hidden units */
   double *output_units;         /* the output units */
+
+  double **kernel_units;         /* kernel used for convolution */
+  double *convolution_units;    /* the transformed input units */
 
   double *hidden_delta;         /* storage for hidden unit error */
   double *output_delta;         /* storage for output unit error */
@@ -45,9 +50,9 @@ typedef struct {
 /*** User-level functions ***/
 
 void bpnn_initialize();
-
 BPNN *bpnn_create();
 void bpnn_free();
+
 
 void bpnn_train();
 void bpnn_feedforward();

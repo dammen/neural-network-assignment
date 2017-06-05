@@ -12,6 +12,6 @@ void backprop_face(IMAGELIST *trainlist, IMAGELIST *test1list, IMAGELIST *test2l
 void printusage(char *prog);
 void performance_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors);
 int evaluate_performance(BPNN *net, double *err);
-int output_result_on_imagelist(BPNN *net, IMAGELIST *il, int list_errors);
+double output_result_on_imagelist(BPNN *net, IMAGELIST *il, int evaluate);
 
 char *names[20];
